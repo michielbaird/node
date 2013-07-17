@@ -1096,10 +1096,26 @@ class SignalSender : public Thread {
   explicit SignalSender(int interval)
       : Thread(Thread::Options("SignalSender", kSignalSenderStackSize)),
         vm_tgid_(getpid()),
-        interval_(interval) {}
+        interval_(interval),
+        about_to_fork_(false) {}
 
   static void SetUp() { if (!mutex_) mutex_ = OS::CreateMutex(); }
   static void TearDown() { delete mutex_; }
+
+  static void PrepareToFork() {
+    if (instance_ != NULL) {
+      Acquire_Store(&instance_->about_to_fork_, 1);
+      RuntimeProfiler::StopRuntimeProfilerThreadBeforeShutdown(instance_);
+      RestoreSignalHandler();
+      Acquire_Store(&instance_->about_to_fork_, 0);
+    }
+  }
+
+  static void ReinitializeAfterForking() {
+    if (instance_ != NULL) {
+      instance_->Start();
+    }
+  }
 
   static void InstallSignalHandler() {
     struct sigaction sa;
@@ -1154,10 +1170,18 @@ class SignalSender : public Thread {
       } else if (!cpu_profiling_enabled && signal_handler_installed_) {
         RestoreSignalHandler();
       }
+      if (NoBarrier_Load(&about_to_fork_)) {
+        return;
+      }
       // When CPU profiling is enabled both JavaScript and C++ code is
       // profiled. We must not suspend.
       if (!cpu_profiling_enabled) {
-        if (rate_limiter_.SuspendIfNecessary()) continue;
+        if (rate_limiter_.SuspendIfNecessary()) {
+          if (Release_Load(&about_to_fork_)) {
+            return;
+          }
+          continue;
+        }
       }
       if (cpu_profiling_enabled && runtime_profiler_enabled) {
         if (!SamplerRegistry::IterateActiveSamplers(&DoCpuProfile, this)) {
@@ -1233,6 +1257,8 @@ class SignalSender : public Thread {
   const int interval_;
   RuntimeProfilerRateLimiter rate_limiter_;
 
+  Atomic32 about_to_fork_;
+
   // Protects the process wide state below.
   static Mutex* mutex_;
   static SignalSender* instance_;
@@ -1283,6 +1309,13 @@ void OS::TearDown() {
   delete limit_mutex;
 }
 
+void OS::PrepareToFork() {
+  SignalSender::PrepareToFork();
+}
+
+void OS::AfterForking() {
+  SignalSender::ReinitializeAfterForking();
+}
 
 Sampler::Sampler(Isolate* isolate, int interval)
     : isolate_(isolate),

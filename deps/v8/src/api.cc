@@ -4390,6 +4390,13 @@ int v8::V8::ContextDisposedNotification() {
   return isolate->heap()->NotifyContextDisposed();
 }
 
+void v8::V8::PrepareToFork() {
+  i::OS::PrepareToFork();
+}
+
+void v8::V8::AfterForking() {
+  i::OS::AfterForking();
+}
 
 const char* v8::V8::GetVersion() {
   return i::Version::GetVersion();

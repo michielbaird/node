@@ -3482,6 +3482,15 @@ class V8EXPORT V8 {
    */
   static int ContextDisposedNotification();
 
+  /**
+   * These functions are used to help v8 survive calls to fork(). PrepareToFork
+   * should be called before executing fork() and AfterForking() should be 
+   * called after fork() returns in both parent and child process. Both
+   * functions must be called with v8 unlocked (e.g. via v8::Unlocker).
+   */
+  static void PrepareToFork();
+  static void AfterForking();
+
  private:
   V8();
 

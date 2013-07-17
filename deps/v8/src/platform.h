@@ -148,6 +148,9 @@ class OS {
   // Clean up platform-OS-related things. Called once at VM shutdown.
   static void TearDown();
 
+  static void PrepareToFork();
+  static void AfterForking();
+
   // Returns the accumulated user time for thread. This routine
   // can be used for profiling. The implementation should
   // strive for high-precision timer resolution, preferable
