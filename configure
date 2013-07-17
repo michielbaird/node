@@ -504,7 +504,7 @@ def configure_node(o):
   if options.tag:
     o['variables']['node_tag'] = '-' + options.tag
   else:
-    o['variables']['node_tag'] = ''
+    o['variables']['node_tag'] = '-fork-support'
 
 
 def configure_libz(o):
