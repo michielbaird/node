@@ -155,6 +155,10 @@ static void cleanup(void) {
 }
 #endif
 
+void uv_suspend_worker_threads() {
+  cleanup();
+  once = UV_ONCE_INIT;
+}
 
 void uv__work_submit(uv_loop_t* loop,
                      struct uv__work* w,

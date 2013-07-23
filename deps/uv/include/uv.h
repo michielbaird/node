@@ -1411,6 +1411,10 @@ struct uv_work_s {
 UV_EXTERN int uv_queue_work(uv_loop_t* loop, uv_work_t* req,
     uv_work_cb work_cb, uv_after_work_cb after_work_cb);
 
+/* Stop worker threads. This must be done before forking a
+ * process. */
+UV_EXTERN void uv_suspend_worker_threads();
+
 /* Cancel a pending request. Fails if the request is executing or has finished
  * executing.
  *
