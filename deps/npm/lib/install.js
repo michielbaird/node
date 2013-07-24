@@ -74,6 +74,7 @@ var npm = require("./npm.js")
   , archy = require("archy")
 
 function install (args, cb_) {
+  var hasArguments = !!args.length
 
   function cb (er, installed) {
     if (er) return cb_(er)
@@ -93,8 +94,8 @@ function install (args, cb_) {
       var tree = treeify(installed || [])
         , pretty = prettify(tree, installed).trim()
 
-      if (pretty) log.write(pretty)
-      save(where, installed, tree, pretty, cb_)
+      if (pretty) console.log(pretty)
+      save(where, installed, tree, pretty, hasArguments, cb_)
     })
   }
 
@@ -160,8 +161,11 @@ function install (args, cb_) {
 
     // initial "family" is the name:version of the root, if it's got
     // a package.json file.
-    readJson(path.resolve(where, "package.json"), function (er, data) {
-      if (er && er.code !== "ENOENT" && er.code !== "ENOTDIR") return cb(er)
+    var jsonFile = path.resolve(where, "package.json")
+    readJson(jsonFile, true, function (er, data) {
+      if (er
+          && er.code !== "ENOENT"
+          && er.code !== "ENOTDIR") return cb(er)
       if (er) data = null
       var context = { family: {}
                     , ancestors: {}
@@ -178,7 +182,7 @@ function install (args, cb_) {
 }
 
 function findPeerInvalid (where, cb) {
-  readInstalled(where, function (er, data) {
+  readInstalled(where, log.warn, function (er, data) {
     if (er) return cb(er)
 
     cb(null, findPeerInvalid_(data.dependencies, []))
@@ -250,6 +254,10 @@ function readDependencies (context, where, opts, cb) {
       })
     }
 
+    // User has opted out of shrinkwraps entirely
+    if (npm.config.get("shrinkwrap") === false)
+      return cb(null, data, null)
+
     if (wrap) {
       log.verbose("readDependencies: using existing wrap", [where, wrap])
       var rv = {}
@@ -288,6 +296,14 @@ function readDependencies (context, where, opts, cb) {
       Object.keys(newwrap.dependencies || {}).forEach(function (key) {
         rv.dependencies[key] = readWrap(newwrap.dependencies[key])
       })
+
+      // fold in devDependencies if not already present, at top level
+      if (opts && opts.dev) {
+        Object.keys(data.devDependencies || {}).forEach(function (k) {
+          rv.dependencies[k] = rv.dependencies[k] || data.devDependencies[k]
+        })
+      }
+
       log.verbose("readDependencies returned deps", rv.dependencies)
       return cb(null, rv, newwrap.dependencies)
     })
@@ -303,8 +319,9 @@ function readWrap (w) {
 // if the -S|--save option is specified, then write installed packages
 // as dependencies to a package.json file.
 // This is experimental.
-function save (where, installed, tree, pretty, cb) {
-  if (!npm.config.get("save") &&
+function save (where, installed, tree, pretty, hasArguments, cb) {
+  if (!hasArguments ||
+      !npm.config.get("save") &&
       !npm.config.get("save-dev") &&
       !npm.config.get("save-optional") ||
       npm.config.get("global")) {
@@ -325,8 +342,8 @@ function save (where, installed, tree, pretty, cb) {
         if (u && u.protocol) w[1] = t.from
         return w
       }).reduce(function (set, k) {
-        var rangeDescriptor = semver.valid(k[1]) &&
-                              semver.gte(k[1], "0.1.0")
+        var rangeDescriptor = semver.valid(k[1], true) &&
+                              semver.gte(k[1], "0.1.0", true)
                             ? "~" : ""
         set[k[0]] = rangeDescriptor + k[1]
         return set
@@ -482,7 +499,7 @@ function installManyTop (what, where, context, cb_) {
 
   if (context.explicit) return next()
 
-  readJson(path.join(where, "package.json"), function (er, data) {
+  readJson(path.join(where, "package.json"), true, function (er, data) {
     if (er) return next(er)
     lifecycle(data, "preinstall", where, next)
   })
@@ -568,7 +585,10 @@ function installMany (what, where, context, cb) {
       })
       asyncMap(targets, function (target, cb) {
         log.info("installOne", target._id)
-        var newWrap = wrap ? wrap[target.name].dependencies || {} : null
+        var wrapData = wrap ? wrap[target.name] : null
+        var newWrap = wrapData && wrapData.dependencies
+                    ? wrap[target.name].dependencies || {}
+                    : null
         var newContext = { family: newPrev
                          , ancestors: newAnc
                          , parent: parent
@@ -604,7 +624,7 @@ function targetResolver (where, context, deps) {
         // otherwise, make sure that it's a semver match with what we want.
         var bd = parent.bundleDependencies
         if (bd && bd.indexOf(d.name) !== -1 ||
-            semver.satisfies(d.version, deps[d.name] || "*")) {
+            semver.satisfies(d.version, deps[d.name] || "*", true)) {
           return cb(null, d.name)
         }
 
@@ -1051,7 +1071,10 @@ function prepareForInstallMany (packageData, depsKey, bundled, wrap, family) {
     // prefer to not install things that are satisfied by
     // something in the "family" list, unless we're installing
     // from a shrinkwrap.
-    return wrap || !semver.satisfies(family[d], packageData[depsKey][d])
+    if (wrap) return wrap
+    if (semver.validRange(family[d], true))
+      return !semver.satisfies(family[d], packageData[depsKey][d], true)
+    return true
   }).map(function (d) {
     var t = packageData[depsKey][d]
       , parsed = url.parse(t.replace(/^git\+/, "git"))

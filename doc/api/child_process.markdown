@@ -225,7 +225,7 @@ that some connections will be handled by the parent and some by the child.
 
 For `dgram` servers the workflow is exactly the same.  Here you listen on
 a `message` event instead of `connection` and use `server.bind` instead of
-`server.listen`.
+`server.listen`.  (Currently only supported on UNIX platforms.)
 
 #### Example: sending socket object
 
@@ -454,10 +454,6 @@ not portable to all platforms and therefore removed.
 With `customFds` it was possible to hook up the new process' `[stdin, stdout,
 stderr]` to existing streams; `-1` meant that a new stream should be created.
 Use at your own risk.
-
-There are several internal options. In particular `stdinStream`,
-`stdoutStream`, `stderrStream`. They are for INTERNAL USE ONLY. As with all
-undocumented APIs in Node, they should not be used.
 
 See also: `child_process.exec()` and `child_process.fork()`
 

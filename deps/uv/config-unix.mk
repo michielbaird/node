@@ -29,9 +29,8 @@ CPPFLAGS += -D_FILE_OFFSET_BITS=64
 
 RUNNER_SRC=test/runner-unix.c
 RUNNER_CFLAGS=$(CFLAGS) -I$(SRCDIR)/test
-RUNNER_LDFLAGS=-L"$(CURDIR)" -luv
+RUNNER_LDFLAGS=
 
-HAVE_DTRACE=
 DTRACE_OBJS=
 DTRACE_HEADER=
 
@@ -60,13 +59,15 @@ OBJS += src/inet.o
 OBJS += src/version.o
 
 ifeq (sunos,$(PLATFORM))
-HAVE_DTRACE=1
+HAVE_DTRACE ?= 1
 CPPFLAGS += -D__EXTENSIONS__ -D_XOPEN_SOURCE=500
 LDFLAGS+=-lkstat -lnsl -lsendfile -lsocket
 # Library dependencies are not transitive.
 OBJS += src/unix/sunos.o
+ifeq (1, $(HAVE_DTRACE))
 OBJS += src/unix/dtrace.o
 DTRACE_OBJS += src/unix/core.o
+endif
 endif
 
 ifeq (aix,$(PLATFORM))
@@ -76,7 +77,7 @@ OBJS += src/unix/aix.o
 endif
 
 ifeq (darwin,$(PLATFORM))
-HAVE_DTRACE=1
+HAVE_DTRACE ?= 1
 # dtrace(1) probes contain dollar signs on OS X. Mute the warnings they
 # generate but only when CC=clang, -Wno-dollar-in-identifier-extension
 # is a clang extension.
@@ -106,7 +107,9 @@ OBJS += src/unix/linux-core.o \
 endif
 
 ifeq (freebsd,$(PLATFORM))
-HAVE_DTRACE=1
+ifeq ($(shell dtrace -l 1>&2 2>/dev/null; echo $$?),0)
+HAVE_DTRACE ?= 1
+endif
 LDFLAGS+=-lkvm
 OBJS += src/unix/freebsd.o
 OBJS += src/unix/kqueue.o
@@ -155,6 +158,13 @@ SO_LDFLAGS = -Wl,-soname,libuv.so.0.10
 endif
 
 RUNNER_LDFLAGS += $(LDFLAGS)
+
+all:
+	# Force a sequential build of the static and the shared library.
+	# Works around a make quirk where it forgets to (re)build either
+	# the *.o or *.pic.o files, depending on what target comes first.
+	$(MAKE) -f $(SRCDIR)/Makefile libuv.a
+	$(MAKE) -f $(SRCDIR)/Makefile libuv.$(SOEXT)
 
 libuv.a: $(OBJS)
 	$(AR) rcs $@ $^
