@@ -169,6 +169,8 @@ int uv__next_timeout(const uv_loop_t* loop);
 /* signal */
 void uv__signal_close(uv_signal_t* handle);
 void uv__signal_global_once_init(void);
+void uv__signal_global_cleanup(void);
+int uv__signal_loop_once_init(uv_loop_t* loop);
 void uv__signal_loop_cleanup(uv_loop_t* loop);
 
 /* thread pool */
@@ -182,6 +184,7 @@ void uv__work_done(uv_async_t* handle, int status);
 uint64_t uv__hrtime(void);
 int uv__kqueue_init(uv_loop_t* loop);
 int uv__platform_loop_init(uv_loop_t* loop, int default_loop);
+void uv__platform_loop_reinit_after_fork(uv_loop_t*);
 void uv__platform_loop_delete(uv_loop_t* loop);
 
 /* various */

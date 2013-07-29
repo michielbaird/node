@@ -62,6 +62,12 @@ static void uv__signal_global_init(void) {
     abort();
 }
 
+void uv__signal_global_cleanup(void) {
+  pthread_once_t once = PTHREAD_ONCE_INIT;
+  close(uv__signal_lock_pipefd[0]);
+  close(uv__signal_lock_pipefd[1]);
+  memcpy(&uv__signal_global_init_guard, &once, sizeof(once));
+}
 
 void uv__signal_global_once_init(void) {
   pthread_once(&uv__signal_global_init_guard, uv__signal_global_init);
@@ -205,7 +211,7 @@ static void uv__signal_unregister_handler(int signum) {
 }
 
 
-static int uv__signal_loop_once_init(uv_loop_t* loop) {
+int uv__signal_loop_once_init(uv_loop_t* loop) {
   /* Return if already initialized. */
   if (loop->signal_pipefd[0] != -1)
     return 0;

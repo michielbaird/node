@@ -258,6 +258,8 @@ UV_EXTERN void uv_loop_delete(uv_loop_t*);
  */
 UV_EXTERN uv_loop_t* uv_default_loop(void);
 
+UV_EXTERN void uv_after_fork(void);
+
 /*
  * This function runs the event loop. It will act differently depending on the
  * specified mode:

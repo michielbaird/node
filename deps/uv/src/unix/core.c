@@ -239,6 +239,18 @@ uv_loop_t* uv_default_loop(void) {
   return (default_loop_ptr = &default_loop_struct);
 }
 
+void uv_after_fork(void) {
+  if (default_loop_ptr) {
+    uv__signal_loop_cleanup(default_loop_ptr);
+  }
+  uv__signal_global_cleanup();
+
+  uv__signal_global_once_init();
+  if (default_loop_ptr) {
+    uv__signal_loop_once_init(default_loop_ptr);
+    uv__platform_loop_reinit_after_fork(default_loop_ptr);
+  }
+}
 
 uv_loop_t* uv_loop_new(void) {
   uv_loop_t* loop;
