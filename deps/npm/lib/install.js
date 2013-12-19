@@ -72,6 +72,7 @@ var npm = require("./npm.js")
   , mkdir = require("mkdirp")
   , lifecycle = require("./utils/lifecycle.js")
   , archy = require("archy")
+  , isGitUrl = require("./utils/is-git-url.js")
 
 function install (args, cb_) {
   var hasArguments = !!args.length
@@ -162,7 +163,7 @@ function install (args, cb_) {
     // initial "family" is the name:version of the root, if it's got
     // a package.json file.
     var jsonFile = path.resolve(where, "package.json")
-    readJson(jsonFile, true, function (er, data) {
+    readJson(jsonFile, log.warn, function (er, data) {
       if (er
           && er.code !== "ENOENT"
           && er.code !== "ENOTDIR") return cb(er)
@@ -238,7 +239,9 @@ function readDependencies (context, where, opts, cb) {
   var wrap = context ? context.wrap : null
 
   readJson( path.resolve(where, "package.json")
+          , log.warn
           , function (er, data) {
+    if (er && er.code === "ENOENT") er.code = "ENOPACKAGEJSON"
     if (er)  return cb(er)
 
     if (opts && opts.dev) {
@@ -499,7 +502,7 @@ function installManyTop (what, where, context, cb_) {
 
   if (context.explicit) return next()
 
-  readJson(path.join(where, "package.json"), true, function (er, data) {
+  readJson(path.join(where, "package.json"), log.warn, function (er, data) {
     if (er) return next(er)
     lifecycle(data, "preinstall", where, next)
   })
@@ -524,7 +527,7 @@ function installManyTop_ (what, where, context, cb) {
     asyncMap(pkgs.map(function (p) {
       return path.resolve(nm, p, "package.json")
     }), function (jsonfile, cb) {
-      readJson(jsonfile, function (er, data) {
+      readJson(jsonfile, log.warn, function (er, data) {
         if (er && er.code !== "ENOENT" && er.code !== "ENOTDIR") return cb(er)
         if (er) return cb(null, [])
         return cb(null, [[data.name, data.version]])
@@ -615,7 +618,7 @@ function targetResolver (where, context, deps) {
     })
 
     asyncMap(inst, function (pkg, cb) {
-      readJson(path.resolve(nm, pkg, "package.json"), function (er, d) {
+      readJson(path.resolve(nm, pkg, "package.json"), log.warn, function (er, d) {
         if (er && er.code !== "ENOENT" && er.code !== "ENOTDIR") return cb(er)
         // error means it's not a package, most likely.
         if (er) return cb(null, [])
@@ -688,11 +691,19 @@ function targetResolver (where, context, deps) {
         return cb(null, [])
       }
 
+      // if the target is a git repository, we always want to fetch it
+      var isGit = false
+        , maybeGit = what.split("@").pop()
+
+      if (maybeGit)
+        isGit = isGitUrl(url.parse(maybeGit))
+
       if (!er &&
           data &&
           !context.explicit &&
           context.family[data.name] === data.version &&
-          !npm.config.get("force")) {
+          !npm.config.get("force") &&
+          !isGit) {
         log.info("already installed", data.name + "@" + data.version)
         return cb(null, [])
       }
@@ -734,7 +745,7 @@ function localLink (target, where, context, cb) {
                              , "package.json" )
     , parent = context.parent
 
-  readJson(jsonFile, function (er, data) {
+  readJson(jsonFile, log.warn, function (er, data) {
     if (er && er.code !== "ENOENT" && er.code !== "ENOTDIR") return cb(er)
     if (er || data._id === target._id) {
       if (er) {
@@ -982,7 +993,7 @@ function write (target, targetFolder, context, cb_) {
     if (!er) return cb_(er, data)
 
     if (false === npm.config.get("rollback")) return cb_(er)
-    npm.commands.unbuild([targetFolder], function (er2) {
+    npm.commands.unbuild([targetFolder], true, function (er2) {
       if (er2) log.error("error rolling back", target._id, er2)
       return cb_(er, data)
     })

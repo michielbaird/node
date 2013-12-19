@@ -106,6 +106,7 @@ var commandCache = {}
               , "tst": "test"
               , "find-dupes": "dedupe"
               , "ddp": "dedupe"
+              , "v": "view"
               }
 
   , aliasNames = Object.keys(aliases)
@@ -146,6 +147,7 @@ var commandCache = {}
               , "edit"
               , "explore"
               , "docs"
+              , "repo"
               , "bugs"
               , "faq"
               , "root"
@@ -282,7 +284,7 @@ function load (npm, cli, cb) {
       var color = conf.get("color")
 
       log.level = conf.get("loglevel")
-      log.heading = "npm"
+      log.heading = conf.get("heading") || "npm"
       log.stream = conf.get("logstream")
       switch (color) {
         case "always": log.enableColor(); break
@@ -477,9 +479,14 @@ Object.defineProperty(npm, "cache",
   })
 
 var tmpFolder
+var crypto = require("crypto")
+var rand = crypto.randomBytes(6)
+                 .toString("base64")
+                 .replace(/\//g, '_')
+                 .replace(/\+/, '-')
 Object.defineProperty(npm, "tmp",
   { get : function () {
-      if (!tmpFolder) tmpFolder = "npm-" + process.pid
+      if (!tmpFolder) tmpFolder = "npm-" + process.pid + "-" + rand
       return path.resolve(npm.config.get("tmp"), tmpFolder)
     }
   , enumerable : true

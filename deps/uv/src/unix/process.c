@@ -73,7 +73,9 @@ static void uv__chld(uv_signal_t* handle, int signum) {
   assert(signum == SIGCHLD);
 
   for (;;) {
-    pid = waitpid(-1, &status, WNOHANG);
+    do
+      pid = waitpid(-1, &status, WNOHANG);
+    while (pid == -1 && errno == EINTR);
 
     if (pid == 0)
       return;
@@ -184,7 +186,7 @@ skip:
 
 /*
  * Used for initializing stdio streams like options.stdin_stream. Returns
- * zero on success.
+ * zero on success. See also the cleanup section in uv_spawn().
  */
 static int uv__process_init_stdio(uv_stdio_container_t* container, int fds[2]) {
   int mask;
@@ -461,11 +463,18 @@ int uv_spawn(uv_loop_t* loop,
 error:
   uv__set_sys_error(process->loop, errno);
 
-  for (i = 0; i < stdio_count; i++) {
-    close(pipes[i][0]);
-    close(pipes[i][1]);
+  if (pipes != NULL) {
+    for (i = 0; i < stdio_count; i++) {
+      if (i < options.stdio_count)
+        if (options.stdio[i].flags & (UV_INHERIT_FD | UV_INHERIT_STREAM))
+          continue;
+      if (pipes[i][0] != -1)
+        close(pipes[i][0]);
+      if (pipes[i][1] != -1)
+        close(pipes[i][1]);
+    }
+    free(pipes);
   }
-  free(pipes);
 
   return -1;
 }

@@ -710,6 +710,7 @@ Handle<Value> SecureContext::LoadPKCS12(const Arguments& args) {
 
       X509_STORE_add_cert(sc->ca_store_, x509);
       SSL_CTX_add_client_CA(sc->ctx_, x509);
+      X509_free(x509);
     }
 
     EVP_PKEY_free(pkey);
@@ -1021,7 +1022,6 @@ void Connection::Initialize(Handle<Object> target) {
   NODE_SET_PROTOTYPE_METHOD(t, "getCurrentCipher", Connection::GetCurrentCipher);
   NODE_SET_PROTOTYPE_METHOD(t, "start", Connection::Start);
   NODE_SET_PROTOTYPE_METHOD(t, "shutdown", Connection::Shutdown);
-  NODE_SET_PROTOTYPE_METHOD(t, "receivedShutdown", Connection::ReceivedShutdown);
   NODE_SET_PROTOTYPE_METHOD(t, "close", Connection::Close);
 
 #ifdef OPENSSL_NPN_NEGOTIATED
@@ -1188,6 +1188,7 @@ int Connection::SelectSNIContextCallback_(SSL *s, int *ad, void* arg) {
         p->sniContext_ = Persistent<Value>::New(ret);
         SecureContext *sc = ObjectWrap::Unwrap<SecureContext>(
                                 Local<Object>::Cast(ret));
+        p->InitNPN(sc, true);
         SSL_set_SSL_CTX(s, sc->ctx_);
       } else {
         return SSL_TLSEXT_ERR_NOACK;
@@ -1222,20 +1223,7 @@ Handle<Value> Connection::New(const Arguments& args) {
 
   if (is_server) SSL_set_info_callback(p->ssl_, SSLInfoCallback);
 
-#ifdef OPENSSL_NPN_NEGOTIATED
-  if (is_server) {
-    // Server should advertise NPN protocols
-    SSL_CTX_set_next_protos_advertised_cb(sc->ctx_,
-                                          AdvertiseNextProtoCallback_,
-                                          NULL);
-  } else {
-    // Client should select protocol from advertised
-    // If server supports NPN
-    SSL_CTX_set_next_proto_select_cb(sc->ctx_,
-                                     SelectNextProtoCallback_,
-                                     NULL);
-  }
-#endif
+  p->InitNPN(sc, is_server);
 
 #ifdef SSL_CTRL_SET_TLSEXT_SERVERNAME_CB
   if (is_server) {
@@ -1777,20 +1765,6 @@ Handle<Value> Connection::Shutdown(const Arguments& args) {
 }
 
 
-Handle<Value> Connection::ReceivedShutdown(const Arguments& args) {
-  HandleScope scope;
-
-  Connection *ss = Connection::Unwrap(args);
-
-  if (ss->ssl_ == NULL) return False();
-  int r = SSL_get_shutdown(ss->ssl_);
-
-  if (r & SSL_RECEIVED_SHUTDOWN) return True();
-
-  return False();
-}
-
-
 Handle<Value> Connection::IsInitFinished(const Arguments& args) {
   HandleScope scope;
 
@@ -1977,6 +1951,24 @@ Handle<Value> Connection::Close(const Arguments& args) {
     ss->ssl_ = NULL;
   }
   return True();
+}
+
+
+void Connection::InitNPN(SecureContext* sc, bool is_server) {
+#ifdef OPENSSL_NPN_NEGOTIATED
+  if (is_server) {
+    // Server should advertise NPN protocols
+    SSL_CTX_set_next_protos_advertised_cb(sc->ctx_,
+                                          AdvertiseNextProtoCallback_,
+                                          NULL);
+  } else {
+    // Client should select protocol from advertised
+    // If server supports NPN
+    SSL_CTX_set_next_proto_select_cb(sc->ctx_,
+                                     SelectNextProtoCallback_,
+                                     NULL);
+  }
+#endif
 }
 
 #ifdef OPENSSL_NPN_NEGOTIATED
@@ -2264,10 +2256,13 @@ class Cipher : public ObjectWrap {
     unsigned char* out = 0;
     int out_len = 0, r;
     if (args[0]->IsString()) {
+      Local<String> string = args[0].As<String>();
       enum encoding encoding = ParseEncoding(args[1], BINARY);
-      size_t buflen = StringBytes::StorageSize(args[0], encoding);
+      if (!StringBytes::IsValidString(string, encoding))
+        return ThrowTypeError("Bad input string");
+      size_t buflen = StringBytes::StorageSize(string, encoding);
       char* buf = new char[buflen];
-      size_t written = StringBytes::Write(buf, buflen, args[0], encoding);
+      size_t written = StringBytes::Write(buf, buflen, string, encoding);
       r = cipher->CipherUpdate(buf, written, &out, &out_len);
       delete[] buf;
     } else {
@@ -2573,10 +2568,13 @@ class Decipher : public ObjectWrap {
     unsigned char* out = 0;
     int out_len = 0, r;
     if (args[0]->IsString()) {
+      Local<String> string = args[0].As<String>();
       enum encoding encoding = ParseEncoding(args[1], BINARY);
-      size_t buflen = StringBytes::StorageSize(args[0], encoding);
+      if (!StringBytes::IsValidString(string, encoding))
+        return ThrowTypeError("Bad input string");
+      size_t buflen = StringBytes::StorageSize(string, encoding);
       char* buf = new char[buflen];
-      size_t written = StringBytes::Write(buf, buflen, args[0], encoding);
+      size_t written = StringBytes::Write(buf, buflen, string, encoding);
       r = cipher->DecipherUpdate(buf, written, &out, &out_len);
       delete[] buf;
     } else {
@@ -2762,10 +2760,13 @@ class Hmac : public ObjectWrap {
     // Only copy the data if we have to, because it's a string
     int r;
     if (args[0]->IsString()) {
+      Local<String> string = args[0].As<String>();
       enum encoding encoding = ParseEncoding(args[1], BINARY);
-      size_t buflen = StringBytes::StorageSize(args[0], encoding);
+      if (!StringBytes::IsValidString(string, encoding))
+        return ThrowTypeError("Bad input string");
+      size_t buflen = StringBytes::StorageSize(string, encoding);
       char* buf = new char[buflen];
-      size_t written = StringBytes::Write(buf, buflen, args[0], encoding);
+      size_t written = StringBytes::Write(buf, buflen, string, encoding);
       r = hmac->HmacUpdate(buf, written);
       delete[] buf;
     } else {
@@ -2891,10 +2892,13 @@ class Hash : public ObjectWrap {
     // Only copy the data if we have to, because it's a string
     int r;
     if (args[0]->IsString()) {
+      Local<String> string = args[0].As<String>();
       enum encoding encoding = ParseEncoding(args[1], BINARY);
-      size_t buflen = StringBytes::StorageSize(args[0], encoding);
+      if (!StringBytes::IsValidString(string, encoding))
+        return ThrowTypeError("Bad input string");
+      size_t buflen = StringBytes::StorageSize(string, encoding);
       char* buf = new char[buflen];
-      size_t written = StringBytes::Write(buf, buflen, args[0], encoding);
+      size_t written = StringBytes::Write(buf, buflen, string, encoding);
       r = hash->HashUpdate(buf, written);
       delete[] buf;
     } else {
@@ -3054,10 +3058,13 @@ class Sign : public ObjectWrap {
     // Only copy the data if we have to, because it's a string
     int r;
     if (args[0]->IsString()) {
+      Local<String> string = args[0].As<String>();
       enum encoding encoding = ParseEncoding(args[1], BINARY);
-      size_t buflen = StringBytes::StorageSize(args[0], encoding);
+      if (!StringBytes::IsValidString(string, encoding))
+        return ThrowTypeError("Bad input string");
+      size_t buflen = StringBytes::StorageSize(string, encoding);
       char* buf = new char[buflen];
-      size_t written = StringBytes::Write(buf, buflen, args[0], encoding);
+      size_t written = StringBytes::Write(buf, buflen, string, encoding);
       r = sign->SignUpdate(buf, written);
       delete[] buf;
     } else {
@@ -3170,6 +3177,9 @@ class Verify : public ObjectWrap {
   int VerifyFinal(char* key_pem, int key_pemLen, unsigned char* sig, int siglen) {
     if (!initialised_) return 0;
 
+    ClearErrorOnReturn clear_error_on_return;
+    (void) &clear_error_on_return;  // Silence compiler warning.
+
     EVP_PKEY* pkey = NULL;
     BIO *bp = NULL;
     X509 *x509 = NULL;
@@ -3279,10 +3289,13 @@ class Verify : public ObjectWrap {
     // Only copy the data if we have to, because it's a string
     int r;
     if (args[0]->IsString()) {
+      Local<String> string = args[0].As<String>();
       enum encoding encoding = ParseEncoding(args[1], BINARY);
-      size_t buflen = StringBytes::StorageSize(args[0], encoding);
+      if (!StringBytes::IsValidString(string, encoding))
+        return ThrowTypeError("Bad input string");
+      size_t buflen = StringBytes::StorageSize(string, encoding);
       char* buf = new char[buflen];
-      size_t written = StringBytes::Write(buf, buflen, args[0], encoding);
+      size_t written = StringBytes::Write(buf, buflen, string, encoding);
       r = verify->VerifyUpdate(buf, written);
       delete[] buf;
     } else {
@@ -3992,7 +4005,9 @@ void RandomBytesCheck(RandomBytesRequest* req, Local<Value> argv[2]) {
     Buffer* buffer = Buffer::New(req->data_, req->size_, RandomBytesFree, NULL);
     argv[0] = Local<Value>::New(Null());
     argv[1] = Local<Object>::New(buffer->handle_);
+    req->data_ = NULL;
   }
+  free(req->data_);
 }
 
 

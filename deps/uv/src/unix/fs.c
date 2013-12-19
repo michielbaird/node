@@ -302,7 +302,7 @@ static ssize_t uv__fs_sendfile_emul(uv_fs_t* req) {
    *
    * 1. Read errors are reported only if nsent==0, otherwise we return nsent.
    *    The user needs to know that some data has already been sent, to stop
-   *    him from sending it twice.
+   *    them from sending it twice.
    *
    * 2. Write errors are always reported. Write errors are bad because they
    *    mean data loss: we've read data but now we can't write it out.
@@ -598,8 +598,8 @@ int uv_fs_chmod(uv_loop_t* loop,
 int uv_fs_chown(uv_loop_t* loop,
                 uv_fs_t* req,
                 const char* path,
-                int uid,
-                int gid,
+                uv_uid_t uid,
+                uv_gid_t gid,
                 uv_fs_cb cb) {
   INIT(CHOWN);
   PATH;
@@ -631,8 +631,8 @@ int uv_fs_fchmod(uv_loop_t* loop,
 int uv_fs_fchown(uv_loop_t* loop,
                  uv_fs_t* req,
                  uv_file file,
-                 int uid,
-                 int gid,
+                 uv_uid_t uid,
+                 uv_gid_t gid,
                  uv_fs_cb cb) {
   INIT(FCHOWN);
   req->file = file;
