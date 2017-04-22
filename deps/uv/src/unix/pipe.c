@@ -146,6 +146,9 @@ int uv_pipe_open(uv_pipe_t* handle, uv_file fd) {
     return err;
 #endif /* defined(__APPLE__) */
 
+  if (uv__nonblock(fd, 1)) {
+    abort();
+  }
   return uv__stream_open((uv_stream_t*)handle,
                          fd,
                          UV_STREAM_READABLE | UV_STREAM_WRITABLE);

@@ -91,6 +91,30 @@ STATIC_ASSERT(sizeof(&((uv_buf_t*) 0)->len) ==
 STATIC_ASSERT(offsetof(uv_buf_t, base) == offsetof(struct iovec, iov_base));
 STATIC_ASSERT(offsetof(uv_buf_t, len) == offsetof(struct iovec, iov_len));
 
+void uv_unix_after_fork(uv_loop_t* default_loop_ptr) {
+  if (default_loop_ptr) {
+    uv__signal_loop_cleanup(default_loop_ptr);
+  }
+
+  uv__signal_global_cleanup();
+  uv__signal_global_once_init();
+
+  if (default_loop_ptr) {
+    uv__signal_loop_once_init(default_loop_ptr);
+
+    uv__async_stop(default_loop_ptr, &default_loop_ptr->async_watcher);
+    uv__async_close(&default_loop_ptr->wq_async);
+
+    if (uv_async_init(default_loop_ptr, &default_loop_ptr->wq_async, uv__work_done)) {
+      abort();
+    }
+    uv__handle_unref(&default_loop_ptr->wq_async);
+    default_loop_ptr->wq_async.flags |= UV__HANDLE_INTERNAL;
+
+    uv__platform_loop_reinit_after_fork(default_loop_ptr);
+  }
+
+}
 
 uint64_t uv_hrtime(void) {
   return uv__hrtime(UV_CLOCK_PRECISE);

@@ -662,3 +662,9 @@ void uv_loop_delete(uv_loop_t* loop) {
   if (loop != default_loop)
     uv__free(loop);
 }
+
+extern void uv_unix_after_fork(uv_loop_t* default_loop_ptr);
+
+void uv_after_fork() {
+  uv_unix_after_fork(default_loop_ptr);
+}

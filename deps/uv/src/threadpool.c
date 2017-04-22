@@ -138,6 +138,11 @@ UV_DESTRUCTOR(static void cleanup(void)) {
 }
 #endif
 
+void uv_suspend_worker_threads() {
+  cleanup();
+  once = UV_ONCE_INIT;
+}
+
 
 static void init_once(void) {
   unsigned int i;

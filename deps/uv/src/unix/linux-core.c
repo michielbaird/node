@@ -114,6 +114,37 @@ void uv__platform_loop_delete(uv_loop_t* loop) {
   loop->inotify_fd = -1;
 }
 
+void uv__platform_loop_reinit_after_fork(uv_loop_t* loop) {
+  int i;
+  uv__io_t* w;
+  struct uv__epoll_event e;
+
+  if (loop->backend_fd != -1) {
+    close(loop->backend_fd);
+  }
+
+  if (loop->inotify_fd != -1) {
+    abort();
+  }
+
+  if (uv__platform_loop_init(loop)) {
+    abort();
+  }
+
+  for (i=0; i < (int)loop->nwatchers; ++i) {
+    w = loop->watchers[i];
+    if (w != NULL) {
+      e.events = w->pevents;
+      e.data = w->fd;
+      if (uv__epoll_ctl(loop->backend_fd, UV__EPOLL_CTL_ADD, w->fd, &e)) {
+        abort();
+      }
+    }
+  }
+
+}
+
+
 
 void uv__platform_invalidate_fd(uv_loop_t* loop, int fd) {
   struct uv__epoll_event* events;
