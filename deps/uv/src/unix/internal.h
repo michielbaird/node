@@ -231,15 +231,18 @@ int uv__next_timeout(const uv_loop_t* loop);
 
 /* signal */
 void uv__signal_close(uv_signal_t* handle);
+void uv__signal_global_cleanup(void);
 void uv__signal_global_once_init(void);
 void uv__signal_loop_cleanup(uv_loop_t* loop);
 int uv__signal_loop_fork(uv_loop_t* loop);
+int uv__signal_loop_once_init(uv_loop_t* loop);
 
 /* platform specific */
 uint64_t uv__hrtime(uv_clocktype_t type);
 int uv__kqueue_init(uv_loop_t* loop);
 int uv__platform_loop_init(uv_loop_t* loop);
 void uv__platform_loop_delete(uv_loop_t* loop);
+void uv__platform_loop_reinit_after_fork(uv_loop_t* loop);
 void uv__platform_invalidate_fd(uv_loop_t* loop, int fd);
 
 /* various */
