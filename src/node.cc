@@ -3295,7 +3295,7 @@ void SetupProcessObject(Environment* env,
   process->Set(env->env_string(), process_env);
 
   auto pid_fixed_string = FIXED_ONE_BYTE_STRING(env->isolate(), "pid");
-  CHECK(process->SetAccessor(env->context,
+  CHECK(process->SetAccessor(env->context(),
                              pid_fixed_string,
                              PidGetter,
                              PidSetter,
