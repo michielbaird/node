@@ -2973,6 +2973,18 @@ static void DebugPortSetter(Local<Name> property,
   debug_port = value->Int32Value();
 }
 
+static void PidGetter(Local<Name> property,
+                            const PropertyCallbackInfo<Value>& info) {
+  info.GetReturnValue().Set(getpid());
+}
+
+
+static void PidSetter(Local<Name> property,
+                            Local<Value> value,
+                            const PropertyCallbackInfo<void>& info) {
+  // NOOP
+}
+
 
 static void DebugProcess(const FunctionCallbackInfo<Value>& args);
 static void DebugPause(const FunctionCallbackInfo<Value>& args);
@@ -3262,7 +3274,13 @@ void SetupProcessObject(Environment* env,
       process_env_template->NewInstance(env->context()).ToLocalChecked();
   process->Set(env->env_string(), process_env);
 
-  READONLY_PROPERTY(process, "pid", Integer::New(env->isolate(), getpid()));
+  auto pid_fixed_string = FIXED_ONE_BYTE_STRING(env->isolate(), "pid");
+  CHECK(process->SetAccessor(env->context,
+                             pid_fixed_string,
+                             PidGetter,
+                             PidSetter,
+                             env->as_external()).FromJust());
+  //READONLY_PROPERTY(process, "pid", Integer::New(env->isolate(), getpid()));
   READONLY_PROPERTY(process, "features", GetFeatures(env));
 
   auto need_immediate_callback_string =
