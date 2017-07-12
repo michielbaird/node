@@ -1315,6 +1315,7 @@ Object* Isolate::PromoteScheduledException() {
 
 void Isolate::PrintCurrentStackTrace(FILE* out) {
   StackTraceFrameIterator it(this);
+  PrintF(out, "ANDREW: Printing stack trace");
   while (!it.done()) {
     PrintF(out, "ANDREW: Got new frame.\n");
     HandleScope scope(this);
