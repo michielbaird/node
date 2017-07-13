@@ -7541,6 +7541,7 @@ void Isolate::GetStackSample(const RegisterState& state, void** frames,
 
 void Isolate::PrintStack(FILE* out) {
   i::Isolate* isolate = reinterpret_cast<i::Isolate*>(this);
+  ENTER_V8(isolate);
   isolate->PrintStack(out);
 }
 
