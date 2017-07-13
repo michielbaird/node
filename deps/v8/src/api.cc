@@ -7547,6 +7547,11 @@ void Isolate::GetStackSample(const RegisterState& state, void** frames,
                                 frames, frames_limit, sample_info);
 }
 
+void Isolate::PrintStack(FILE* out) {
+  i::Isolate* isolate = reinterpret_cast<i::Isolate*>(this);
+  isolate->PrintStack(out);
+}
+
 
 void Isolate::SetEventLogger(LogEventCallback that) {
   // Do not overwrite the event logger if we want to log explicitly.
