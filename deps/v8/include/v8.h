@@ -5787,6 +5787,8 @@ class V8_EXPORT Isolate {
   void GetStackSample(const RegisterState& state, void** frames,
                       size_t frames_limit, SampleInfo* sample_info);
 
+  void PrintStack(FILE* out);
+
   /**
    * Adjusts the amount of registered external memory. Used to give V8 an
    * indication of the amount of externally allocated memory that is kept alive
