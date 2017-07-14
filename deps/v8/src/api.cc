@@ -1070,12 +1070,12 @@ void Template::Set(v8::Local<Name> name, v8::Local<Data> value,
                                  static_cast<i::PropertyAttributes>(attribute));
 }
 
-    void Isolate::PrintStack(FILE* out) {
-        auto templ = Utils::OpenHandle(this);
+void Isolate::PrintStack(FILE* out) {
+  auto templ = Utils::OpenHandle(this);
   i::Isolate* isolate = templ->GetIsolate();
-      ENTER_V8(isolate);
-      isolate->PrintStack(out);
-    }
+  ENTER_V8(isolate);
+  isolate->PrintStack(out);
+}
 
 
 void Template::SetAccessorProperty(
