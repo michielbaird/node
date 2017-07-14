@@ -1070,6 +1070,13 @@ void Template::Set(v8::Local<Name> name, v8::Local<Data> value,
                                  static_cast<i::PropertyAttributes>(attribute));
 }
 
+    void Isolate::PrintStack(FILE* out) {
+        auto templ = Utils::OpenHandle(this);
+  i::Isolate* isolate = templ->GetIsolate();
+      ENTER_V8(isolate);
+      isolate->PrintStack(out);
+    }
+
 
 void Template::SetAccessorProperty(
     v8::Local<v8::Name> name,
@@ -7539,11 +7546,7 @@ void Isolate::GetStackSample(const RegisterState& state, void** frames,
                                 frames, frames_limit, sample_info);
 }
 
-void Isolate::PrintStack(FILE* out) {
-  i::Isolate* isolate = reinterpret_cast<i::Isolate*>(this);
-  ENTER_V8(isolate);
-  isolate->PrintStack(out);
-}
+
 
 
 void Isolate::SetEventLogger(LogEventCallback that) {
