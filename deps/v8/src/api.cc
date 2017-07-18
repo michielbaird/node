@@ -5539,6 +5539,14 @@ void v8::V8::ShutdownPlatform() {
   i::V8::ShutdownPlatform();
 }
 
+void v8::V8::EnsureInitialized() {
+  i::V8::EnsureInitialized();
+}
+
+static void ForkingCleanup() {
+  i::V8::ForkingCleanup();
+}
+
 
 bool v8::V8::Initialize() {
   i::V8::Initialize();
@@ -5593,11 +5601,6 @@ HeapObjectStatistics::HeapObjectStatistics()
 
 bool v8::V8::InitializeICU(const char* icu_data_file) {
   return i::InitializeICU(icu_data_file);
-}
-
-
-v8::Platform* v8::V8::GetCurrentPlatform() {
-    return i::GetCurrentPlatform();
 }
 
 void v8::V8::InitializeExternalStartupData(const char* directory_path) {

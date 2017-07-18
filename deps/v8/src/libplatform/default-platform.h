@@ -30,6 +30,7 @@ class DefaultPlatform : public Platform {
   void SetThreadPoolSize(int thread_pool_size);
 
   void EnsureInitialized();
+  void ForkingCleanup();
 
   bool PumpMessageLoop(v8::Isolate* isolate);
 
@@ -43,7 +44,6 @@ class DefaultPlatform : public Platform {
   void CallIdleOnForegroundThread(Isolate* isolate, IdleTask* task) override;
   bool IdleTasksEnabled(Isolate* isolate) override;
 
-    void ForkingCleanup();
   double MonotonicallyIncreasingTime() override;
   const uint8_t* GetCategoryGroupEnabled(const char* name) override;
   const char* GetCategoryGroupName(

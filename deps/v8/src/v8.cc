@@ -109,6 +109,16 @@ v8::Platform* V8::GetCurrentPlatform() {
   return platform_;
 }
 
+void V8::EnsureInitialized(v8::Platform* platform) {
+  CHECK(platform_);
+  platform_->EnsureInitialized();
+}
+
+void V8::ForkingCleanup(v8::Platform* platform) {
+  CHECK(platform_);
+  platform_->ForkingCleanup();
+}
+
 
 void V8::SetPlatformForTesting(v8::Platform* platform) { platform_ = platform; }
 
