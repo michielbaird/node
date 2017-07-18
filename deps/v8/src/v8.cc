@@ -109,12 +109,12 @@ v8::Platform* V8::GetCurrentPlatform() {
   return platform_;
 }
 
-void V8::EnsureInitialized(v8::Platform* platform) {
+void V8::EnsureInitialized() {
   CHECK(platform_);
   platform_->EnsureInitialized();
 }
 
-void V8::ForkingCleanup(v8::Platform* platform) {
+void V8::ForkingCleanup() {
   CHECK(platform_);
   platform_->ForkingCleanup();
 }
