@@ -5543,7 +5543,7 @@ void v8::V8::EnsureInitialized() {
   i::V8::EnsureInitialized();
 }
 
-static void ForkingCleanup() {
+void v8::V8::ForkingCleanup() {
   i::V8::ForkingCleanup();
 }
 
