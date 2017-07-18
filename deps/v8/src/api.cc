@@ -5596,6 +5596,10 @@ bool v8::V8::InitializeICU(const char* icu_data_file) {
 }
 
 
+v8::Platform* v8::V8::GetCurrentPlatform() {
+    return i::GetCurrentPlatform();
+}
+
 void v8::V8::InitializeExternalStartupData(const char* directory_path) {
   i::InitializeExternalStartupData(directory_path);
 }

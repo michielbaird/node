@@ -91,6 +91,7 @@ class Platform {
   virtual void CallDelayedOnForegroundThread(Isolate* isolate, Task* task,
                                              double delay_in_seconds) = 0;
 
+    virtual void ForkingCleanup();
   /**
    * Schedules a task to be invoked on a foreground thread wrt a specific
    * |isolate| when the embedder is idle.

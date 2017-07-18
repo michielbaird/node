@@ -34,6 +34,16 @@ const int DefaultPlatform::kMaxThreadPoolSize = 8;
 DefaultPlatform::DefaultPlatform()
     : initialized_(false), thread_pool_size_(0) {}
 
+void DefaultPlatform::ForkingCleanup() {
+  base::LockGuard<base::Mutex> guard(&lock_);
+  queue_.Terminate();
+  if (initialized_) {
+    for (auto i = thread_pool_.begin(); i != thread_pool_.end(); ++i) {
+      delete *i;
+    }
+  }
+  thread_pool_.clear();
+}
 
 DefaultPlatform::~DefaultPlatform() {
   base::LockGuard<base::Mutex> guard(&lock_);
