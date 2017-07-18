@@ -6657,7 +6657,7 @@ class V8_EXPORT V8 {
    */
   static void ShutdownPlatform();
 
-    static v8::Platform* GetCurrentPlatform();
+  static Platform* GetCurrentPlatform();
 
  private:
   V8();
