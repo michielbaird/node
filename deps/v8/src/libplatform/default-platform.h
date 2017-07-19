@@ -30,6 +30,7 @@ class DefaultPlatform : public Platform {
   void SetThreadPoolSize(int thread_pool_size);
 
   void EnsureInitialized();
+  void ForkingCleanup();
 
   bool PumpMessageLoop(v8::Isolate* isolate);
 

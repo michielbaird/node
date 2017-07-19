@@ -6655,6 +6655,10 @@ class V8_EXPORT V8 {
    */
   static void ShutdownPlatform();
 
+  static void EnsureInitialized();
+
+  static void ForkingCleanup();
+
  private:
   V8();
 
