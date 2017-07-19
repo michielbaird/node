@@ -1071,10 +1071,6 @@ void Template::Set(v8::Local<Name> name, v8::Local<Data> value,
 }
 
 void Isolate::PrintStack(FILE* out) {
-  auto templ = Utils::OpenHandle(this);
-  i::Isolate* isolate = templ->GetIsolate();
-  ENTER_V8(isolate);
-  isolate->PrintStack(out);
 }
 
 
