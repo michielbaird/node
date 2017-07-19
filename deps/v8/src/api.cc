@@ -1070,9 +1070,6 @@ void Template::Set(v8::Local<Name> name, v8::Local<Data> value,
                                  static_cast<i::PropertyAttributes>(attribute));
 }
 
-void Isolate::PrintStack(FILE* out) {
-}
-
 
 void Template::SetAccessorProperty(
     v8::Local<v8::Name> name,
@@ -5599,6 +5596,7 @@ bool v8::V8::InitializeICU(const char* icu_data_file) {
   return i::InitializeICU(icu_data_file);
 }
 
+
 void v8::V8::InitializeExternalStartupData(const char* directory_path) {
   i::InitializeExternalStartupData(directory_path);
 }
@@ -7556,8 +7554,6 @@ void Isolate::GetStackSample(const RegisterState& state, void** frames,
   i::TickSample::GetStackSample(isolate, state, i::TickSample::kSkipCEntryFrame,
                                 frames, frames_limit, sample_info);
 }
-
-
 
 
 void Isolate::SetEventLogger(LogEventCallback that) {

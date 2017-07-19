@@ -43,7 +43,6 @@ class DefaultPlatform : public Platform {
                                      double delay_in_seconds) override;
   void CallIdleOnForegroundThread(Isolate* isolate, IdleTask* task) override;
   bool IdleTasksEnabled(Isolate* isolate) override;
-
   double MonotonicallyIncreasingTime() override;
   const uint8_t* GetCategoryGroupEnabled(const char* name) override;
   const char* GetCategoryGroupName(

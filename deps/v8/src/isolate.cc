@@ -1315,9 +1315,7 @@ Object* Isolate::PromoteScheduledException() {
 
 void Isolate::PrintCurrentStackTrace(FILE* out) {
   StackTraceFrameIterator it(this);
-  PrintF(out, "ANDREW: Printing stack trace");
   while (!it.done()) {
-    PrintF(out, "ANDREW: Got new frame.\n");
     HandleScope scope(this);
     // Find code position if recorded in relocation info.
     JavaScriptFrame* frame = it.frame();
@@ -1336,7 +1334,6 @@ void Isolate::PrintCurrentStackTrace(FILE* out) {
     Handle<String> line =
         Execution::GetStackTraceLine(recv, fun, pos_obj, is_top_level);
     if (line->length() > 0) {
-      PrintF(out, "ANDREW: Got new line.\n");
       line->PrintOn(out);
       PrintF(out, "\n");
     }
