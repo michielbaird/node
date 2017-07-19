@@ -52,13 +52,13 @@ Task* TaskQueue::GetNext() {
 
 void TaskQueue::PurgeWorkers() {
   base::LockGuard<base::Mutex> guard(&lock_);
-  purging = true;
+  purging_ = true;
   process_queue_semaphore_.Signal();
 }
 
 void TaskQueue::StopPurgeWorkers() {
   base::LockGuard<base::Mutex> guard(&lock_);
-  purging = false;
+  purging_ = false;
 }
 
 void TaskQueue::Terminate() {
