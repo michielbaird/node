@@ -36,7 +36,6 @@ DefaultPlatform::DefaultPlatform()
 
 void DefaultPlatform::ForkingCleanup() {
   base::LockGuard<base::Mutex> guard(&lock_);
-  queue_.Terminate();
   if (initialized_) {
     for (auto i = thread_pool_.begin(); i != thread_pool_.end(); ++i) {
       delete *i;
