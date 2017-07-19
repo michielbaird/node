@@ -43,6 +43,7 @@ void DefaultPlatform::ForkingCleanup() {
     }
   }
   thread_pool_.clear();
+  initialized_ = false;
 }
 
 DefaultPlatform::~DefaultPlatform() {
