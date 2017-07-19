@@ -32,11 +32,16 @@ class TaskQueue {
   // Terminate the queue.
   void Terminate();
 
+  void PurgeWorkers();
+
+  void StopPurgeWorkers();
+
  private:
   base::Mutex lock_;
   base::Semaphore process_queue_semaphore_;
   std::queue<Task*> task_queue_;
   bool terminated_;
+  bool purging_;
 
   DISALLOW_COPY_AND_ASSIGN(TaskQueue);
 };

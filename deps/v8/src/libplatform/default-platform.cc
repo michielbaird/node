@@ -36,12 +36,14 @@ DefaultPlatform::DefaultPlatform()
 
 void DefaultPlatform::ForkingCleanup() {
   base::LockGuard<base::Mutex> guard(&lock_);
+  queue_.PurgeWorkers();
   if (initialized_) {
     for (auto i = thread_pool_.begin(); i != thread_pool_.end(); ++i) {
       delete *i;
     }
   }
   thread_pool_.clear();
+  queue_.StopPurgeWorkers();
   initialized_ = false;
 }
 
