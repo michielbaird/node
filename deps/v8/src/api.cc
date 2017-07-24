@@ -11,6 +11,8 @@
 #include <cmath>  // For isnan.
 #include <limits>
 #include <vector>
+#include <ofstream>
+#include <string>
 #include "include/v8-debug.h"
 #include "include/v8-experimental.h"
 #include "include/v8-profiler.h"
@@ -5547,6 +5549,13 @@ bool v8::V8::Initialize() {
   i::ReadNatives();
 #endif
   return true;
+}
+
+void v8::V8::LogMessage(std::string message) {
+  std::ofstream ofs;
+  ofs.open("/tmp/stack_trace.txt", std::ofstream::out | std::ofstream::app);
+  ofs << message;
+  ofs.close();
 }
 
 

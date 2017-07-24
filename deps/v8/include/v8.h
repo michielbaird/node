@@ -6508,6 +6508,9 @@ class V8_EXPORT V8 {
    */
   static bool Initialize();
 
+
+  static void LogMessage();
+
   /**
    * Allows the host application to provide a callback which can be used
    * as a source of entropy for random number generators.
