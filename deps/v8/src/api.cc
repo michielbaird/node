@@ -11,7 +11,7 @@
 #include <cmath>  // For isnan.
 #include <limits>
 #include <vector>
-#include <ofstream>
+#include <fstream>
 #include <string>
 #include "include/v8-debug.h"
 #include "include/v8-experimental.h"
