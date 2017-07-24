@@ -19,6 +19,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <utility>
+#include <string>
 #include <vector>
 
 #include "v8-version.h"  // NOLINT(build/include)
@@ -6509,7 +6510,7 @@ class V8_EXPORT V8 {
   static bool Initialize();
 
 
-  static void LogMessage();
+  static void LogMessage(std::string);
 
   /**
    * Allows the host application to provide a callback which can be used
