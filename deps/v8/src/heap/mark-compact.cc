@@ -465,11 +465,11 @@ class MarkCompactCollector::SweeperTask : public v8::Task {
  public:
   SweeperTask(Heap* heap, AllocationSpace space_to_start)
       : heap_(heap), space_to_start_(space_to_start) {
-    v8::V8::LogMessage("Starting thread");
+    v8::V8::LogMessage("Starting thread " + v8::V8::ConvertAddressToString(this) + "\n");
   }
 
   virtual ~SweeperTask() {
-    v8::V8::LogMessage("Stopping thread");
+    v8::V8::LogMessage("Stopping thread "+ v8::V8::ConvertAddressToString(this)  + "\n");
   }
 
  private:
@@ -486,6 +486,7 @@ class MarkCompactCollector::SweeperTask : public v8::Task {
       heap_->mark_compact_collector()->SweepInParallel(
           heap_->paged_space(space_id), 0);
     }
+    v8::V8::LogMessage("Signalling semaphore ==1== " + v8::V8::ConvertAddressToString(this) + "\n");
     heap_->mark_compact_collector()->pending_sweeper_tasks_semaphore_.Signal();
   }
 
@@ -497,7 +498,7 @@ class MarkCompactCollector::SweeperTask : public v8::Task {
 
 
 void MarkCompactCollector::StartSweeperThreads() {
-  v8::V8::LogMessage("starting sweeping threads");
+  v8::V8::LogMessage("Starting sweeping threads\n");
   V8::GetCurrentPlatform()->CallOnBackgroundThread(
       new SweeperTask(heap(), OLD_SPACE), v8::Platform::kShortRunningTask);
   V8::GetCurrentPlatform()->CallOnBackgroundThread(
@@ -541,9 +542,13 @@ void MarkCompactCollector::EnsureSweepingCompleted() {
   }
 
   if (FLAG_concurrent_sweeping) {
+    v8::V8::LogMessage("Waiting semaphore ==1== " + v8::V8::ConvertAddressToString(this) + "\n");
     pending_sweeper_tasks_semaphore_.Wait();
+    v8::V8::LogMessage("Waiting semaphore ==2== " + v8::V8::ConvertAddressToString(this) + "\n");
     pending_sweeper_tasks_semaphore_.Wait();
+    v8::V8::LogMessage("Waiting semaphore ==3== " + v8::V8::ConvertAddressToString(this) + "\n");
     pending_sweeper_tasks_semaphore_.Wait();
+    v8::V8::LogMessage("Not waiting ==4== " + v8::V8::ConvertAddressToString(this) + "\n");
   }
 
   ParallelSweepSpacesComplete();
@@ -561,10 +566,12 @@ void MarkCompactCollector::EnsureSweepingCompleted() {
 
 
 bool MarkCompactCollector::IsSweepingCompleted() {
+  v8::V8::LogMessage("Waiting semaphore (special) " + v8::V8::ConvertAddressToString(this) + "\n");
   if (!pending_sweeper_tasks_semaphore_.WaitFor(
           base::TimeDelta::FromSeconds(0))) {
     return false;
   }
+  v8::V8::LogMessage("Signal semaphore (special) " + v8::V8::ConvertAddressToString(this) + "\n");
   pending_sweeper_tasks_semaphore_.Signal();
   return true;
 }

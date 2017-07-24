@@ -21,6 +21,7 @@
 #include <utility>
 #include <string>
 #include <vector>
+#include <sstream>
 
 #include "v8-version.h"  // NOLINT(build/include)
 #include "v8config.h"    // NOLINT(build/include)
@@ -6511,6 +6512,12 @@ class V8_EXPORT V8 {
 
 
   static void LogMessage(std::string);
+
+static std::string ConvertAddressToString(int *address) {
+  std::stringstream ss;
+  ss << address;
+  return ss.str();
+}
 
   /**
    * Allows the host application to provide a callback which can be used
