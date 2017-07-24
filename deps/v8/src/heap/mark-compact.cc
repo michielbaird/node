@@ -464,9 +464,13 @@ void MarkCompactCollector::ClearMarkbits() {
 class MarkCompactCollector::SweeperTask : public v8::Task {
  public:
   SweeperTask(Heap* heap, AllocationSpace space_to_start)
-      : heap_(heap), space_to_start_(space_to_start) {}
+      : heap_(heap), space_to_start_(space_to_start) {
+    v8::V8::LogMessage("Starting thread");
+  }
 
-  virtual ~SweeperTask() {}
+  virtual ~SweeperTask() {
+    v8::V8::LogMessage("Stopping thread");
+  }
 
  private:
   // v8::Task overrides.
@@ -492,7 +496,7 @@ class MarkCompactCollector::SweeperTask : public v8::Task {
 };
 
 
-void MarkCompactCollector::StartSweeperThreads() {
+void MarkCompactCollector::() {
   v8::V8::LogMessage("starting sweeping threads");
   V8::GetCurrentPlatform()->CallOnBackgroundThread(
       new SweeperTask(heap(), OLD_SPACE), v8::Platform::kShortRunningTask);
