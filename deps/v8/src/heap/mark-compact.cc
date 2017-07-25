@@ -465,11 +465,11 @@ class MarkCompactCollector::SweeperTask : public v8::Task {
  public:
   SweeperTask(Heap* heap, AllocationSpace space_to_start)
       : heap_(heap), space_to_start_(space_to_start) {
-    v8::V8::LogMessage("Starting thread " + v8::V8::ConvertAddressToString(this) + "\n");
+    v8::V8::LogMessage("Starting thread \n");
   }
 
   virtual ~SweeperTask() {
-    v8::V8::LogMessage("Stopping thread "+ v8::V8::ConvertAddressToString(this)  + "\n");
+    v8::V8::LogMessage("Stopping thread \n");
   }
 
  private:
@@ -486,7 +486,7 @@ class MarkCompactCollector::SweeperTask : public v8::Task {
       heap_->mark_compact_collector()->SweepInParallel(
           heap_->paged_space(space_id), 0);
     }
-    v8::V8::LogMessage("Signalling semaphore ==1== " + v8::V8::ConvertAddressToString(this) + "\n");
+    v8::V8::LogMessage("Signalling semaphore ==1== \n");
     heap_->mark_compact_collector()->pending_sweeper_tasks_semaphore_.Signal();
   }
 
@@ -542,13 +542,13 @@ void MarkCompactCollector::EnsureSweepingCompleted() {
   }
 
   if (FLAG_concurrent_sweeping) {
-    v8::V8::LogMessage("Waiting semaphore ==1== " + v8::V8::ConvertAddressToString(this) + "\n");
+    v8::V8::LogMessage("Waiting semaphore ==1== \n");
     pending_sweeper_tasks_semaphore_.Wait();
-    v8::V8::LogMessage("Waiting semaphore ==2== " + v8::V8::ConvertAddressToString(this) + "\n");
+    v8::V8::LogMessage("Waiting semaphore ==2== \n");
     pending_sweeper_tasks_semaphore_.Wait();
-    v8::V8::LogMessage("Waiting semaphore ==3== " + v8::V8::ConvertAddressToString(this) + "\n");
+    v8::V8::LogMessage("Waiting semaphore ==3== \n");
     pending_sweeper_tasks_semaphore_.Wait();
-    v8::V8::LogMessage("Not waiting ==4== " + v8::V8::ConvertAddressToString(this) + "\n");
+    v8::V8::LogMessage("Not waiting ==4== \n");
   }
 
   ParallelSweepSpacesComplete();
@@ -566,12 +566,12 @@ void MarkCompactCollector::EnsureSweepingCompleted() {
 
 
 bool MarkCompactCollector::IsSweepingCompleted() {
-  v8::V8::LogMessage("Waiting semaphore (special) " + v8::V8::ConvertAddressToString(this) + "\n");
+  v8::V8::LogMessage("Waiting semaphore (special) \n");
   if (!pending_sweeper_tasks_semaphore_.WaitFor(
           base::TimeDelta::FromSeconds(0))) {
     return false;
   }
-  v8::V8::LogMessage("Signal semaphore (special) " + v8::V8::ConvertAddressToString(this) + "\n");
+  v8::V8::LogMessage("Signal semaphore (special) \n");
   pending_sweeper_tasks_semaphore_.Signal();
   return true;
 }
