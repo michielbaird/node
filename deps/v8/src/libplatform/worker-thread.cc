@@ -6,17 +6,20 @@
 
 #include "include/v8-platform.h"
 #include "src/libplatform/task-queue.h"
+#include "v8.h"
 
 namespace v8 {
 namespace platform {
 
 WorkerThread::WorkerThread(TaskQueue* queue)
     : Thread(Options("V8 WorkerThread")), queue_(queue) {
+    v8::V8::LogMessage("Starting Thread");
   Start();
 }
 
 
 WorkerThread::~WorkerThread() {
+  v8::V8::LogMessage("Killing Thread");
   Join();
 }
 
