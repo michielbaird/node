@@ -26,11 +26,11 @@ WorkerThread::~WorkerThread() {
 
 void WorkerThread::Run() {
   while (Task* task = queue_->GetNext()) {
-    v8::V8::LogMessage("WorkerThread: Running Task");
+    v8::V8::LogMessage("WorkerThread: Running Task\n");
     task->Run();
-    v8::V8::LogMessage("WorkerThread: Deleting Task");
+    v8::V8::LogMessage("WorkerThread: Deleting Task\n");
     delete task;
-    v8::V8::LogMessage("WorkerThread: Done Task");
+    v8::V8::LogMessage("WorkerThread: Done Task\n");
   }
 }
 

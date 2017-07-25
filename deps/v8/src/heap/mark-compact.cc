@@ -3759,7 +3759,7 @@ void MarkCompactCollector::StartSweepSpace(PagedSpace* space) {
 
 
 void MarkCompactCollector::SweepSpaces() {
-  v8::V8::LogMessage("MarkCompactCollector::SweepSpaces() ");
+  v8::V8::LogMessage("MarkCompactCollector::SweepSpaces()\n");
   TRACE_GC(heap()->tracer(), GCTracer::Scope::MC_SWEEP);
   double start_time = 0.0;
   if (FLAG_print_cumulative_gc_stat) {
