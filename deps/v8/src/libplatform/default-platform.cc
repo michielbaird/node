@@ -12,6 +12,7 @@
 #include "src/base/platform/time.h"
 #include "src/base/sys-info.h"
 #include "src/libplatform/worker-thread.h"
+#include "src/v8.h"
 
 namespace v8 {
 namespace platform {
@@ -32,7 +33,9 @@ bool PumpMessageLoop(v8::Platform* platform, v8::Isolate* isolate) {
 const int DefaultPlatform::kMaxThreadPoolSize = 8;
 
 DefaultPlatform::DefaultPlatform()
-    : initialized_(false), thread_pool_size_(0) {}
+    : initialized_(false), thread_pool_size_(0) {
+  v8::V8::LogMessage("DefaultPlatform constructor");
+}
 
 void DefaultPlatform::ForkingCleanup() {
   base::LockGuard<base::Mutex> guard(&lock_);
@@ -48,6 +51,7 @@ void DefaultPlatform::ForkingCleanup() {
 }
 
 DefaultPlatform::~DefaultPlatform() {
+  v8::V8::LogMessage("DefaultPlatform destructor");
   base::LockGuard<base::Mutex> guard(&lock_);
   queue_.Terminate();
   if (initialized_) {
@@ -84,12 +88,14 @@ void DefaultPlatform::SetThreadPoolSize(int thread_pool_size) {
 
 
 void DefaultPlatform::EnsureInitialized() {
+    v8::V8::LogMessage("EnsureInitialized");
   base::LockGuard<base::Mutex> guard(&lock_);
   if (initialized_) return;
   initialized_ = true;
 
   for (int i = 0; i < thread_pool_size_; ++i)
     thread_pool_.push_back(new WorkerThread(&queue_));
+  v8::V8::LogMessage("EnsureInitialized: done creating workers");
 }
 
 
@@ -146,6 +152,7 @@ bool DefaultPlatform::PumpMessageLoop(v8::Isolate* isolate) {
 void DefaultPlatform::CallOnBackgroundThread(Task *task,
                                              ExpectedRuntime expected_runtime) {
   EnsureInitialized();
+  v8::V8::LogMessage("DefaultPlatform: CallOnBackgroundThread appending task");
   queue_.Append(task);
 }
 

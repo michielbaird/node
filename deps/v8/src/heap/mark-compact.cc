@@ -465,11 +465,11 @@ class MarkCompactCollector::SweeperTask : public v8::Task {
  public:
   SweeperTask(Heap* heap, AllocationSpace space_to_start)
       : heap_(heap), space_to_start_(space_to_start) {
-    v8::V8::LogMessage("Starting thread \n");
+    v8::V8::LogMessage("SweeperTask: Constructor \n");
   }
 
   virtual ~SweeperTask() {
-    v8::V8::LogMessage("Stopping thread \n");
+    v8::V8::LogMessage("SweeperTask: Destructor \n");
   }
 
  private:
@@ -480,14 +480,17 @@ class MarkCompactCollector::SweeperTask : public v8::Task {
     const int offset = space_to_start_ - FIRST_PAGED_SPACE;
     const int num_spaces = LAST_PAGED_SPACE - FIRST_PAGED_SPACE + 1;
     for (int i = 0; i < num_spaces; i++) {
+      v8::V8::LogMessage("SweeperTask: Iterating loop \n");
       const int space_id = FIRST_PAGED_SPACE + ((i + offset) % num_spaces);
       DCHECK_GE(space_id, FIRST_PAGED_SPACE);
       DCHECK_LE(space_id, LAST_PAGED_SPACE);
       heap_->mark_compact_collector()->SweepInParallel(
           heap_->paged_space(space_id), 0);
+      v8::V8::LogMessage("SweeperTask: Iterating loop \n");
     }
-    v8::V8::LogMessage("Signalling semaphore ==1== \n");
+    v8::V8::LogMessage("SweeperTask: Signalling semaphore ==1== \n");
     heap_->mark_compact_collector()->pending_sweeper_tasks_semaphore_.Signal();
+    v8::V8::LogMessage("SweeperTask: Run Done \n");
   }
 
   Heap* heap_;
@@ -498,7 +501,7 @@ class MarkCompactCollector::SweeperTask : public v8::Task {
 
 
 void MarkCompactCollector::StartSweeperThreads() {
-  v8::V8::LogMessage("Starting sweeping threads\n");
+  v8::V8::LogMessage("MarkCompactCollector: StartingSweeperThreads\n");
   V8::GetCurrentPlatform()->CallOnBackgroundThread(
       new SweeperTask(heap(), OLD_SPACE), v8::Platform::kShortRunningTask);
   V8::GetCurrentPlatform()->CallOnBackgroundThread(
@@ -3756,6 +3759,7 @@ void MarkCompactCollector::StartSweepSpace(PagedSpace* space) {
 
 
 void MarkCompactCollector::SweepSpaces() {
+  v8::V8::LogMessage("MarkCompactCollector::SweepSpaces() ");
   TRACE_GC(heap()->tracer(), GCTracer::Scope::MC_SWEEP);
   double start_time = 0.0;
   if (FLAG_print_cumulative_gc_stat) {

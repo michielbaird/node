@@ -13,21 +13,24 @@ namespace platform {
 
 WorkerThread::WorkerThread(TaskQueue* queue)
     : Thread(Options("V8 WorkerThread")), queue_(queue) {
-    v8::V8::LogMessage("Starting Thread");
+    v8::V8::LogMessage("WorkerThread: Starting\n");
   Start();
 }
 
 
 WorkerThread::~WorkerThread() {
-  v8::V8::LogMessage("Killing Thread");
+  v8::V8::LogMessage("WorkerThread: Killing\n");
   Join();
 }
 
 
 void WorkerThread::Run() {
   while (Task* task = queue_->GetNext()) {
+    v8::V8::LogMessage("WorkerThread: Running Task");
     task->Run();
+    v8::V8::LogMessage("WorkerThread: Deleting Task");
     delete task;
+    v8::V8::LogMessage("WorkerThread: Done Task");
   }
 }
 
