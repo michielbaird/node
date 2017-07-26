@@ -25,7 +25,7 @@ WorkerThread::~WorkerThread() {
 
 
 void WorkerThread::Run() {
-  v8::V8::LogMessage("WorkerThread: Starting");
+  v8::V8::LogMessage("WorkerThread: Run()\n");
   while (Task* task = queue_->GetNext()) {
     v8::V8::LogMessage("WorkerThread: Running Task\n");
     task->Run();
