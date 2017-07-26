@@ -572,6 +572,7 @@ bool MarkCompactCollector::IsSweepingCompleted() {
   v8::V8::LogMessage("Waiting semaphore (special) \n");
   if (!pending_sweeper_tasks_semaphore_.WaitFor(
           base::TimeDelta::FromSeconds(0))) {
+    v8::V8::LogMessage("Apparently sweeping isnt completed \n");
     return false;
   }
   v8::V8::LogMessage("Signal semaphore (special) \n");
