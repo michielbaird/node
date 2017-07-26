@@ -10,7 +10,7 @@
 namespace v8 {
 namespace platform {
 
-TaskQueue::TaskQueue() : process_queue_semaphore_(0), terminated_(false) {}
+TaskQueue::TaskQueue() : process_queue_semaphore_(0), terminated_(false), purging_(false) {}
 
 
 TaskQueue::~TaskQueue() {
@@ -21,46 +21,46 @@ TaskQueue::~TaskQueue() {
 
 
 void TaskQueue::Append(Task* task) {
-  v8::V8::LogMessage("TaskQueue:GetNext() appending");
+  v8::V8::LogMessage("TaskQueue:GetNext() appending\n");
   base::LockGuard<base::Mutex> guard(&lock_);
   DCHECK(!terminated_);
   task_queue_.push(task);
   process_queue_semaphore_.Signal();
-  v8::V8::LogMessage("TaskQueue:GetNext() done appending");
+  v8::V8::LogMessage("TaskQueue:GetNext() done appending\n");
 }
 
 
 Task* TaskQueue::GetNext() {
   for (;;) {
     {
-      v8::V8::LogMessage("TaskQueue:GetNext() try getting");
+      v8::V8::LogMessage("TaskQueue:GetNext() try getting\n");
       base::LockGuard<base::Mutex> guard(&lock_);
-      v8::V8::LogMessage("TaskQueue:GetNext() in lock");
+      v8::V8::LogMessage("TaskQueue:GetNext() in lock\n");
       if (purging_) {
-        v8::V8::LogMessage("TaskQueue:GetNext() purging");
+        v8::V8::LogMessage("TaskQueue:GetNext() purging\n");
         process_queue_semaphore_.Signal();
-        v8::V8::LogMessage("TaskQueue:GetNext() out of lock");
+        v8::V8::LogMessage("TaskQueue:GetNext() out of lock\n");
         return NULL;
       }
       if (!task_queue_.empty()) {
-        v8::V8::LogMessage("TaskQueue:GetNext() giving");
+        v8::V8::LogMessage("TaskQueue:GetNext() giving\n");
         Task* result = task_queue_.front();
         task_queue_.pop();
-        v8::V8::LogMessage("TaskQueue:GetNext() out of lock");
+        v8::V8::LogMessage("TaskQueue:GetNext() out of lock\n");
         return result;
       }
       if (terminated_) {
-        v8::V8::LogMessage("TaskQueue:GetNext() terminated");
+        v8::V8::LogMessage("TaskQueue:GetNext() terminated\n");
         process_queue_semaphore_.Signal();
-        v8::V8::LogMessage("TaskQueue:GetNext() out of lock");
+        v8::V8::LogMessage("TaskQueue:GetNext() out of lock\n");
         return NULL;
       }
 
-      v8::V8::LogMessage("TaskQueue:GetNext() out of lock");
+      v8::V8::LogMessage("TaskQueue:GetNext() out of lock\n");
     }
-    v8::V8::LogMessage("TaskQueue:GetNext() starting waiting");
+    v8::V8::LogMessage("TaskQueue:GetNext() starting waiting\n");
     process_queue_semaphore_.Wait();
-    v8::V8::LogMessage("TaskQueue:GetNext() done waiting");
+    v8::V8::LogMessage("TaskQueue:GetNext() done waiting\n");
   }
 }
 
