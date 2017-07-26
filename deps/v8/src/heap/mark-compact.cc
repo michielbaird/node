@@ -536,15 +536,17 @@ void MarkCompactCollector::SweepAndRefill(CompactionSpace* space) {
 void MarkCompactCollector::EnsureSweepingCompleted() {
   DCHECK(sweeping_in_progress_ == true);
 
+  bool didManuallySweep = false;
   // If sweeping is not completed or not running at all, we try to complete it
   // here.
   if (!FLAG_concurrent_sweeping || !IsSweepingCompleted()) {
     SweepInParallel(heap()->paged_space(OLD_SPACE), 0);
     SweepInParallel(heap()->paged_space(CODE_SPACE), 0);
     SweepInParallel(heap()->paged_space(MAP_SPACE), 0);
+    didManuallySweep = true;
   }
 
-  if (FLAG_concurrent_sweeping) {
+  if (FLAG_concurrent_sweeping && !didManuallySweep) {
     v8::V8::LogMessage("Waiting semaphore ==1== \n");
     pending_sweeper_tasks_semaphore_.Wait();
     v8::V8::LogMessage("Waiting semaphore ==2== \n");
