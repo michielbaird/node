@@ -9,7 +9,7 @@
 namespace v8 {
 namespace platform {
 
-TaskQueue::TaskQueue() : process_queue_semaphore_(0), terminated_(false) {}
+TaskQueue::TaskQueue() : process_queue_semaphore_(0), terminated_(false), purging_(false) {}
 
 
 TaskQueue::~TaskQueue() {
