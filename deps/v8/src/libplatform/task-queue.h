@@ -34,6 +34,10 @@ class V8_PLATFORM_EXPORT TaskQueue {
   // Terminate the queue.
   void Terminate();
 
+  void PurgeWorkers();
+
+  void StopPurgeWorkers();
+
  private:
   FRIEND_TEST(WorkerThreadTest, PostSingleTask);
 
@@ -43,6 +47,7 @@ class V8_PLATFORM_EXPORT TaskQueue {
   base::Mutex lock_;
   std::queue<Task*> task_queue_;
   bool terminated_;
+  bool purging_;
 
   DISALLOW_COPY_AND_ASSIGN(TaskQueue);
 };
