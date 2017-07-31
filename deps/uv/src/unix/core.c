@@ -112,7 +112,7 @@ void uv_unix_after_fork(uv_loop_t* default_loop_ptr) {
   if (default_loop_ptr) {
     uv__signal_loop_once_init(default_loop_ptr);
 
-    uv__async_stop(default_loop_ptr, &default_loop_ptr->async_watcher);
+    uv__async_stop(default_loop_ptr);
     uv__async_close(&default_loop_ptr->wq_async);
 
     if (uv_async_init(default_loop_ptr, &default_loop_ptr->wq_async, uv__work_done)) {
